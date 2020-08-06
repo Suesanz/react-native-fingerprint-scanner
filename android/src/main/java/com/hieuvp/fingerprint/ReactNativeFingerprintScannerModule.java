@@ -102,7 +102,7 @@ public class ReactNativeFingerprintScannerModule
         }
     }
 
-    public BiometricPrompt getBiometricPrompt(final Promise promise) {
+    public BiometricPrompt getBiometricPrompt(final FragmentActivity fragmentActivity, final Promise promise) {
         // memoize so can be accessed to cancel
         if (biometricPrompt != null) {
             return biometricPrompt;
@@ -112,7 +112,6 @@ public class ReactNativeFingerprintScannerModule
         mReactContext.addLifecycleEventListener(this);
 
         AuthCallback authCallback = new AuthCallback(promise);
-        FragmentActivity fragmentActivity = (FragmentActivity) getCurrentActivity();
         Executor executor = Executors.newSingleThreadExecutor();
         biometricPrompt = new BiometricPrompt(
                 fragmentActivity,
@@ -128,8 +127,11 @@ public class ReactNativeFingerprintScannerModule
                 new Runnable() {
                     @Override
                     public void run() {
-                        BiometricPrompt bioPrompt = getBiometricPrompt(promise);
+                        FragmentActivity fragmentActivity = (FragmentActivity) mReactContext.getCurrentActivity();
 
+                        if (fragmentActivity == null) return;
+
+                        BiometricPrompt bioPrompt = getBiometricPrompt(fragmentActivity, promise);
                         PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                                 .setDeviceCredentialAllowed(true)
                                 .setConfirmationRequired(false)
@@ -215,8 +217,7 @@ public class ReactNativeFingerprintScannerModule
                 if (intent != null) {
                     mReactContext.startActivityForResult(intent, KEYGUARD_REQUEST, null);
                 }
-            }
-            else{
+            } else {
                 promise.reject("KEYGUARD_NOT_SET", "Keyguard");
             }
         } else {
